@@ -1,0 +1,92 @@
+name: Sync Upstream Chart & Release
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # weekly on monday
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: "Upstream ref to sync (tag, branch, or SHA)"
+        default: "main"
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Clone upstream code-server
+        run: |
+          git clone --depth 1 \
+            --branch "${{ github.event.inputs.upstream_ref || 'main' }}" \
+            https://github.com/coder/code-server.git /tmp/code-server
+
+      - name: Sync chart into charts/code-server
+        run: |
+          mkdir -p charts
+          rm -rf charts/code-server
+          cp -r /tmp/code-server/ci/helm-chart charts/code-server
+
+      - name: Apply local overrides
+        run: |
+          if [ -d overrides/code-server ]; then
+            cp -r overrides/code-server/* charts/code-server/
+          fi
+
+      - name: Record upstream version
+        run: |
+          cd /tmp/code-server
+          echo "$(git rev-parse HEAD) $(git describe --tags --always)" \
+            > "$GITHUB_WORKSPACE/charts/code-server/.upstream-ref"
+
+      - name: Commit changes
+        id: commit
+        run: |
+          git add charts/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected"
+          else
+            CHART_VERSION=$(grep '^version:' charts/code-server/Chart.yaml | awk '{print $2}')
+            git commit -m "sync: code-server chart ${CHART_VERSION}"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  release:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (post-sync)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          charts_dir: charts
+          skip_existing: true
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
