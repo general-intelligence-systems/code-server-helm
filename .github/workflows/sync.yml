@@ -65,7 +65,6 @@ jobs:
           fi
 
       - name: Tag release
-        if: steps.commit.outputs.changed == 'true'
         run: |
           CHART_VERSION=$(grep '^version:' charts/code-server/Chart.yaml | awk '{print $2}')
           TAG="v${CHART_VERSION}"
