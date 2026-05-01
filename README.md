@@ -1,5 +1,7 @@
 # code-server Helm Chart
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/general-intelligence-systems/code-server-helm)
+
 A Helm chart for deploying [coder/code-server](https://github.com/coder/code-server) on Kubernetes.
 
 This chart is automatically synced from the upstream [coder/code-server](https://github.com/coder/code-server/tree/main/ci/helm-chart) Helm chart on a weekly basis.
