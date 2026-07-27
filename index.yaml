@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   code-server:
   - apiVersion: v2
+    appVersion: 4.130.0
+    created: "2026-07-27T09:34:45.452118346Z"
+    description: A Helm chart for coder/code-server
+    digest: 3e1f1e54f0854382f7c916d37b441c6392cdf119e825a9f9842cb586a57c6e83
+    name: code-server
+    type: application
+    urls:
+    - https://github.com/general-intelligence-systems/code-server-helm/releases/download/code-server-3.45.0/code-server-3.45.0.tgz
+    version: 3.45.0
+  - apiVersion: v2
     appVersion: 4.129.0
     created: "2026-07-20T08:43:24.606943103Z"
     description: A Helm chart for coder/code-server
@@ -101,4 +111,4 @@ entries:
     urls:
     - https://github.com/general-intelligence-systems/code-server-helm/releases/download/code-server-3.33.0/code-server-3.33.0.tgz
     version: 3.33.0
-generated: "2026-07-20T08:43:24.606993318Z"
+generated: "2026-07-27T09:34:45.452268828Z"
